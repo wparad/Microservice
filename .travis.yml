@@ -1,0 +1,22 @@
+language: csharp
+script:
+  - rake build --trace
+  - ls -lR
+deploy:
+  skip_cleanup: true
+  provider: releases
+  file_glob: true
+  file: output/*.nupkg
+  api_key:
+    secure: E1gPVuSh5MsGDMnlxfU7EZFlOV+5iEEOm8oRfWCW0+EPAtNCR0hDvVpQMT5VxkfUSJbEqSz/LJw0YuJ6QDnP6BU5oKDLpTTO7LFxj+pPRpz9Fbw06KnS0073SyK97VmA4LGd+yO+gPWFVY8Av4UqWyiyavSAhrlvNJ0LOz1I0d+YVLWgsH9OJOQgfdByD/uB79+0aiNTNyf+qLWMZbVBpR9FxBYgp4J2GgaArlgA2brwEKcQClQ5SsZns9MsyUQrK2lpPtiU8mdKCEGETumOdMY8EQHUyul+G3vzHBiunXzFD6qQAPnGY2JD8La3+erKOXJ10/zTuJJi8gcuQ1xMLqVCBHDCXWJ4X2EUo3QzcGI9P2MwEpaKUJyqexwabybtux/kU5pKNS9ere+cllwU2Ax907rrKZFCLfamlU/d8XxC84ywIEg+3BmmExnkieClC5dQvrrMnL+rd64gCh3cx9gX3/pOgYQr+S+vMqS+/rn4fTT0IVgh6QP7xzQ028Kz32njPyqKnZpXRZo7bFaP6UCIsQhRlIbfP5lq2kk1ijQ1stgZliwLdVtpVAHeBK2OBSu8tg9/QyKEfsaIL5vB1hGTCJu0RsWZg8SJ1SswaWmQvQm8sQ0AY75lIkW3KRUnovG81ki3UCqPQGpE+uaj04zhkYC1TOYWcfqzxFJ95X0=
+  on:
+    tags: false
+    all_branches: true
+branches:
+  only:
+  - master
+  - /^release.*/
+env:
+  global:
+    #GIT_TAG_PUSHER
+    secure: Zzh93IG/mrRVLyAQdII+9FixLvMJBpSwsyz5bLdeo63zSrDD2Z+GfgDwUqLJB+NWZHoCgvKWoNZuD5/GXXhFuBxvz21/pVCX1OAAFrd48W8xXLJOfM+O/K3ZNPaBuB2AchaPRPbcDmvpmW23n8rhWnx/vyhczDQi8NQvL9oNIbjzCen24xd2BS/MHl7laj0RkA/rsYMlOludFgFZGJPUWklg9/27Me6BRN8VPe3tGVGsQ9fU8MuL08ktXM5uFjy83PTcB/VemWztIWHkedCIoLq5MvDcMKFJxU9euxiJBI64ZAqqekhQVnlflixOMitql18EZdR5nvYMFbXhbNSw60LsDPJGczTcvYrmHt3yvGx78nQo2YzYw/hZ7oC/wN240pw5otrUaxGYmqSekdcT1mASr99QrPhcSr72yb90CC1LtH7UiyxdXd0/Igkd8AmR4wNM8VS+WSG+sKpmoA8rI0Hf+S7aIuVqd2GFPvJLRG8bli2nkd4Blz6OR89pmY0I6upiVCkn6Mk0rUpwf1rkKAxhbLf5TGXyumSecFc4cG0an42y2uZ9BsMwIKUzjnDCbRxJY4wH+X13C6h8H/irLjTp7+48Y385fos08Lt1fFO+3zxX1IsmK0dA7reCS2UsieTs9LcugLDU+eesa95k5TyurWWqFh5GO45Vxt6x9qo=

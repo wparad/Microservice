@@ -26,3 +26,12 @@
 *.exe
 *.out
 *.app
+
+# C#
+obj
+bin
+*.sln.*
+*.suo
+packages
+TcpAppender.nuspec
+output
