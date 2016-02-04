@@ -1,42 +1,39 @@
-var layout = new RedisLayout();
-var appender = new RedisAppender{ RemoteAddress = "redis.service.com", RemotePort = 6379, Layout = layout }; //RemoteAddress should be specific to datacenter
-layout.ActivateOptions();
-appender.ActivateOptions();
-log4net.Config.BasicConfigurator.Configure(appender);
-
-public class MessageTypeV1
-{
-       public string Message { get; set; }
-       public Info Info { get; set; }
-}
- 
-public class Info
-{
-       public string Field1 { get; set; }
-       public int Field2 { get; set; }
-}
- 
-var logger = LogManager.GetLogger(typeof(MyServiceName));
-logger.Info(new MessageTypeV1
-{
-       //Please pass the type field in here, or dynamically add it in your TimberWinRLayout.cs file.  If this is not added, you will lose messages from ElasticSearch.
-       type = typeof(MessageTypeV1),
-       Message = "This is example message",
-       Info = new Info{ Field1 = "A", Field2 = 2 },
-});
-
-
 using System;
 using System.Collections;
 using System.IO;
 using System.Net;
 using System.Reflection;
 using Newtonsoft.Json;
+
+
+using System.Globalization;
+using System.Threading.Tasks;
+using StackExchange.Redis;
 using log4net.Core;
 using log4net.Layout;
- 
-namespace Service.Logging
+using log4net.Appender;
+using log4net.Util;
+
+namespace Service
 {
+    [JsonObject]
+    public class MessageType
+    {
+        [JsonProperty("type")] //Elasticsearch special field
+        public string Type { get; set; }   
+        
+        [JsonProperty]
+        public string Message { get; set; }
+        
+        [JsonProperty]
+        public Info Info { get; set; }
+    }
+ 
+    public class Info
+    {
+           public string Field1 { get; set; }
+           public int Field2 { get; set; }
+    }
     [JsonObject]
     public class RedisJsonLog
     {
@@ -100,19 +97,7 @@ namespace Service.Logging
             });
         }
     }
-}
 
-using System;
-using System.Globalization;
-using System.Net;
-using System.Threading.Tasks;
-using StackExchange.Redis;
-using log4net.Appender;
-using log4net.Core;
-using log4net.Util;
- 
-namespace Logging.RemoteLogging
-{
     public class RedisAppender : AppenderSkeleton
     {
         override protected bool RequiresLayout { get { return true; } }
@@ -123,55 +108,51 @@ namespace Logging.RemoteLogging
  
         private ConnectionMultiplexer Client { get; set; }
         private object connectionMultiplexerLockObject = new object();
-        private Task<ConnectionMultiplexer> GetConnection()
-        {
-            
-        }
  
         public override void ActivateOptions()
         {
             base.ActivateOptions();
  
             if (RemoteAddress == null) { throw new ArgumentException("Remote address of the location must be specified."); }
- 
-            if (RemotePort < IPEndPoint.MinPort || RemotePort > IPEndPoint.MaxPort) 
+
+            if (RemotePort < IPEndPoint.MinPort || RemotePort > IPEndPoint.MaxPort)
             {
-                    throw SystemInfo.CreateArgumentOutOfRangeException("value", RemotePort, 
-                        string.Format("The value specified is less than {0} or greater than {1}.",
-                            IPEndPoint.MinPort.ToString(NumberFormatInfo.InvariantInfo), IPEndPoint.MaxPort.ToString(NumberFormatInfo.InvariantInfo)));
-            {
+                throw SystemInfo.CreateArgumentOutOfRangeException("value", RemotePort,
+                    string.Format("The value specified is less than {0} or greater than {1}.",
+                        IPEndPoint.MinPort.ToString(NumberFormatInfo.InvariantInfo), IPEndPoint.MaxPort.ToString(NumberFormatInfo.InvariantInfo)));
+            }
         }
  
         protected override void Append(LoggingEvent loggingEvent)
         {   
-		Task.Run(() =>
-		{            
-			lock(connectionMultiplexerLockObject)
-			{
-				if (Client == null || !Client.IsConnected)
-				{
-					CloseConnectionMultiplexer(Client, true);
-					Client = ConnectionMultiplexer.Connect(RemoteUrl);			
-				}
-				Client.GetDatabase().ListRightPush("logstash", new RedisValue[] { RenderLoggingEvent(loggingEvent) }));
-			}
-		}).ContinueWith(t => 
+		    Task.Run(() =>
+		    {            
+			    lock(connectionMultiplexerLockObject)
+			    {
+				    if (Client == null || !Client.IsConnected)
+				    {
+					    CloseConnectionMultiplexer(Client, true);
+					    Client = ConnectionMultiplexer.Connect(RemoteUrl);			
+				    }
+				    Client.GetDatabase().ListRightPush("logstash", new RedisValue[] { RenderLoggingEvent(loggingEvent) });
+			    }
+		    }).ContinueWith(t => 
                     ErrorHandler.Error(string.Format("Unable to send logging event to Redis host ({0}).", RemoteUrl), t.Exception, ErrorCode.WriteFailure),
                     TaskContinuationOptions.OnlyOnFaulted);
         }
  
         protected override void OnClose()
         {
-		CloseConnectionMultiplexer(Client, false);
-            	base.OnClose();
+		    CloseConnectionMultiplexer(Client, false);
+            base.OnClose();
         }
  
         private void CloseConnectionMultiplexer(ConnectionMultiplexer connectionMultiplexer, bool allowFinish)
         {
-            	if (connectionMultiplexer != null) { return; }
+            if (connectionMultiplexer != null) { return; }
 
-		connectionMultiplexer.CloseAsync(allowFinish).ContinueWith(t =>
-	            ErrorHandler.Error(string.Format("Unable to successfully close the connection to the Redis host ({0}).", RemoteUrl), exception, ErrorCode.WriteFailure), TaskContinuationOptions.OnlyOnFaulted)
+		    connectionMultiplexer.CloseAsync(allowFinish).ContinueWith(t =>
+   	            ErrorHandler.Error(string.Format("Unable to successfully close the connection to the Redis host ({0}).", RemoteUrl), t.Exception, ErrorCode.WriteFailure), TaskContinuationOptions.OnlyOnFaulted);
         }
     }
 }
