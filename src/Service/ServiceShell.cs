@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Reflection;
 using System.ServiceModel;
 using System.ServiceModel.Description;
 using System.ServiceModel.Web;
@@ -55,7 +56,7 @@ namespace Service
             var logStr = String.Format("{0} {1}\n", DateTime.Now.ToString("o"), str);
             Console.WriteLine(logStr);
 
-            var logDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "InventoryManager", "logs");
+            var logDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), Assembly.GetExecutingAssembly().GetName().Name, "logs");
             if(!Directory.Exists(logDirectory)) { Directory.CreateDirectory(logDirectory); }
             var windowsServiceLog = Path.Combine(logDirectory, "windows_service_log.txt");
             File.AppendAllText(windowsServiceLog, logStr);
