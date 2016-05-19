@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using System.ServiceProcess;
 using System.Web.Script.Serialization;
-using Contracts;
 using Nancy;
 
 namespace Service
