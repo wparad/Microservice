@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using System.ServiceProcess;
-using Contracts;
 using Topshelf;
 
 namespace Service
