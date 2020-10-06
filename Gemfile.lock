@@ -2,9 +2,10 @@ GEM
   remote: https://rubygems.org/
   specs:
     nuget (2.8.50126.400)
-    rake (10.4.2)
+    rake (12.3.3)
 
 PLATFORMS
+  ruby
   x86-mingw32
 
 DEPENDENCIES
